@@ -55,6 +55,8 @@ done
 while getopts ":ahcilnrst" opt; do
   case ${opt} in
     a )
+      echo -e "$yellow" Stopping all running Docker containers "$reset"
+      docker stop $(docker ps --all --quiet)
       echo -e "$yellow" Removing all non-running docker containers"$reset"
       docker rm $(docker ps -aq)
       echo -e "$yellow" Removing all dangling docker images"$reset"
