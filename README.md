@@ -15,5 +15,8 @@ Dockerfix usage:
     -t, --stop-containers   Stop all running containers
 ```
 
-# Setup
+# Installation
+You can install dockerfix using brew:
 
+`brew tap chris-gillatt/homebrew-dockerfix`
+`brew install dockerfix`
