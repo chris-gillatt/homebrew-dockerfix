@@ -1,0 +1,124 @@
+#!/bin/bash
+# Dockerfix - an app to clean up your docker environment and restart the docker daemon for Mac
+# Author: C Gillatt
+
+# Output colour formatting based on OS Type
+if [ "$OSTYPE" == "linux-gnu" ]; then
+  red="\e[31m"
+  green="\e[32m"
+  yellow="\e[33m"
+  reset="\e[0m"
+elif [[ "$OSTYPE" == darwin* ]]; then
+  red="\033[31m"
+  green="\033[32m"
+  yellow="\033[33m"
+  reset="\033[0m"
+else 
+  red=""
+  green=""
+  yellow=""
+  reset=""
+fi 
+
+# Help message
+usage() { echo "Dockerfix usage:
+    -h, --help              Display this help message
+    -a, --all               Do all of the below, except -s
+    -c, --container-prune   Remove all non-running docker containers
+    -i, --image-prune       Remove all dangling docker images
+    -l, --login-gcp         Log back into GCP
+    -n, --network-prune     Remove all docker networks 
+    -r, --restart-docker    Restart Docker Daemon
+    -s, --system-prune      Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
+    -t, --stop-containers   Stop all running containers" 1>&2; }
+
+# Convert --long options to -s(hort) ones as getops does not support long options out of the box
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--all")              set -- "$@" "-a" ;;
+    "--help")             set -- "$@" "-h" ;;
+    "--container-prune")  set -- "$@" "-c" ;;
+    "--image-prune")      set -- "$@" "-i" ;;
+    "--login-gcp")        set -- "$@" "-l" ;;
+    "--network-prune")    set -- "$@" "-n" ;;
+    "--restart-docker")   set -- "$@" "-r" ;;
+    "--system-prune")     set -- "$@" "-s" ;;
+    "--stop-containers")  set -- "$@" "-t" ;;
+    *)                    set -- "$@" "$arg"
+ #   "--"*) usage ${arg}; exit 2;;
+  esac
+done
+
+# Provide parameter flags and reply accordingly
+# TO DO - rip out these commands and put them in nice function blocks above ala help message. 
+while getopts ":ahcilnrst" opt; do
+  case ${opt} in
+    a )
+      echo -e "$yellow" Removing all non-running docker containers"$reset"
+      docker rm $(docker ps -aq)
+      echo -e "$yellow" Removing all dangling docker images"$reset"
+      docker image prune --force
+      echo -e "$yellow" Removing all dangling docker images"$reset"
+      docker image prune --force
+      echo -e "$yellow" Removing all docker networks"$reset"
+      docker network prune --force
+      echo -e "$yellow" Restart Docker Daemon "$reset"
+      killall Docker && open /Applications/Docker.app
+      echo -e "$yellow" Logging back into GCP "$reset"
+      gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+      exit 0
+      ;;
+    h )
+      usage
+      exit 0
+      ;;
+    c )
+      echo -e "$yellow" Removing all non-running docker containers"$reset"
+      docker rm $(docker ps -aq)
+      exit 0
+      ;;
+    i )
+      echo -e "$yellow" Removing all dangling docker images"$reset"
+      docker image prune --force
+      exit 0
+      ;;  
+    l )
+      echo -e "$yellow" Logging into GCP"$reset"
+      gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+      exit 0
+      ;;
+    n )
+      echo -e "$yellow" Removing all docker networks"$reset"
+      docker network prune --force
+      exit 0
+      ;;
+    r )
+      echo -e "$yellow" Restart Docker Daemon "$reset"
+      killall Docker && open /Applications/Docker.app
+      exit 0
+      ;;
+    s )
+      echo -e "$red" Performing Docker System Prune "$reset"
+      docker system prune --all --force
+      exit 0
+      ;;
+    t )
+      echo -e "$yellow" Stopping all running Docker containers "$reset"
+      docker stop $(docker ps --all --quiet)
+      exit 0
+      ;;
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      usage
+      exit 2
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+# If no arguments, print help
+if [ $# -eq 0 ]; then
+    usage
+    exit 2
+fi
