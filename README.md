@@ -18,5 +18,6 @@ Dockerfix usage:
 # Installation
 You can install dockerfix using brew:
 
-`brew tap chris-gillatt/homebrew-dockerfix`
+`brew tap chris-gillatt/homebrew-dockerfix` 
+
 `brew install dockerfix`
