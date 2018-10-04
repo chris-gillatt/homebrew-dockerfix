@@ -66,7 +66,8 @@ while getopts ":ahcilnrst" opt; do
       echo -e "$yellow" Removing all docker networks"$reset"
       docker network prune --force
       echo -e "$yellow" Restart Docker Daemon "$reset"
-      killall Docker && open /Applications/Docker.app
+      killall Docker >/dev/null 2>&1
+      open /Applications/Docker.app
       echo -e "$yellow" Logging back into GCP "$reset"
       gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
       exit 0
@@ -97,7 +98,8 @@ while getopts ":ahcilnrst" opt; do
       ;;
     r )
       echo -e "$yellow" Restart Docker Daemon "$reset"
-      killall Docker && open /Applications/Docker.app
+      killall Docker >/dev/null 2>&1
+      open /Applications/Docker.app
       exit 0
       ;;
     s )
