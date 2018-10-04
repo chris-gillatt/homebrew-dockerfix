@@ -3,6 +3,7 @@
 # Author: C Gillatt
 
 # Output colour formatting based on OS Type
+# TO DO - Properly support CentOS.
 if [ "$OSTYPE" == "linux-gnu" ]; then
   red="\e[31m"
   green="\e[32m"
@@ -50,26 +51,52 @@ for arg in "$@"; do
   esac
 done
 
+stop_all_containers () {
+  echo -e "$yellow" Stopping all running Docker containers "$reset"
+  docker stop "$(docker ps --all --quiet)"
+} # End stop_all_containers
+
+container_prune () {
+  echo -e "$yellow" Removing all non-running docker containers"$reset"
+  docker container prune --force
+} # End container_prune
+
+image_prune () {
+  echo -e "$yellow" Removing all dangling docker images"$reset"
+  docker image prune --force
+} # End image_prune
+
+network_prune () {
+  echo -e "$yellow" Removing all docker networks"$reset"
+  docker network prune --force
+} # network_prune
+
+system_prune () {
+  echo -e "$red" Performing Docker System Prune "$reset"
+  docker system prune --all --force
+} # system_prune
+
+login_to_gcp () {
+  echo -e "$yellow" Logging into GCP"$reset"
+  gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+} # login_to_gcp
+
+restart_docker () {
+  echo -e "$yellow" Restart Docker Daemon "$reset"
+  killall Docker >/dev/null 2>&1
+  open /Applications/Docker.app
+}
+
 # Provide parameter flags and reply accordingly
-# TO DO - rip out these commands and put them in nice function blocks above ala help message. 
 while getopts ":ahcilnrst" opt; do
   case ${opt} in
     a )
-      echo -e "$yellow" Stopping all running Docker containers "$reset"
-      docker stop $(docker ps --all --quiet)
-      echo -e "$yellow" Removing all non-running docker containers"$reset"
-      docker rm $(docker ps -aq)
-      echo -e "$yellow" Removing all dangling docker images"$reset"
-      docker image prune --force
-      echo -e "$yellow" Removing all dangling docker images"$reset"
-      docker image prune --force
-      echo -e "$yellow" Removing all docker networks"$reset"
-      docker network prune --force
-      echo -e "$yellow" Restart Docker Daemon "$reset"
-      killall Docker >/dev/null 2>&1
-      open /Applications/Docker.app
-      echo -e "$yellow" Logging back into GCP "$reset"
-      gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+      stop_all_containers
+      container_prune
+      image_prune
+      network_prune
+      restart_docker
+      login_to_gcp
       exit 0
       ;;
     h )
@@ -77,39 +104,31 @@ while getopts ":ahcilnrst" opt; do
       exit 0
       ;;
     c )
-      echo -e "$yellow" Removing all non-running docker containers"$reset"
-      docker rm $(docker ps -aq)
+      container_prune
       exit 0
       ;;
     i )
-      echo -e "$yellow" Removing all dangling docker images"$reset"
-      docker image prune --force
+      image_prune
       exit 0
       ;;  
     l )
-      echo -e "$yellow" Logging into GCP"$reset"
-      gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+      login_to_gcp
       exit 0
       ;;
     n )
-      echo -e "$yellow" Removing all docker networks"$reset"
-      docker network prune --force
+      network_prune
       exit 0
       ;;
     r )
-      echo -e "$yellow" Restart Docker Daemon "$reset"
-      killall Docker >/dev/null 2>&1
-      open /Applications/Docker.app
+      restart_docker
       exit 0
       ;;
     s )
-      echo -e "$red" Performing Docker System Prune "$reset"
-      docker system prune --all --force
+      system_prune
       exit 0
       ;;
     t )
-      echo -e "$yellow" Stopping all running Docker containers "$reset"
-      docker stop $(docker ps --all --quiet)
+      stop_all_containers
       exit 0
       ;;
     \? )

@@ -1,9 +1,9 @@
 class Dockerfix < Formula
-  desc "App to help clean up your docker environment"
+  desc "An app to help clean up your docker environment"
   homepage "https://github.com/chris-gillatt/homebrew-dockerfix"
-  url "https://github.com/chris-gillatt/homebrew-dockerfix/raw/master/tars/dockerfix-0.0.2.tar.gz"
-  sha256 "4a584b79f9bae3d06a7c86faaf69719af2808e96a3b20bf50b0889d504801cda"
-  version "0.0.2"
+  url "https://github.com/chris-gillatt/homebrew-dockerfix/raw/master/tars/dockerfix-0.0.3.tar.gz"
+  sha256 "ef67de4f5db26fecfea31cd5624efed3877844e7a2f1fc7b7e3060360f031a98"
+  version "0.0.3"
 
   depends_on "curl"
 
