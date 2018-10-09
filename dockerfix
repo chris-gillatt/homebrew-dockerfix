@@ -91,6 +91,14 @@ restart_docker_mac () {
   killall Docker >/dev/null 2>&1 ; open /Applications/Docker.app
 } # End restart_docker_mac
 
+docker_daemon_health_check () {
+  until docker info >/dev/null 2>&1 ; do
+    echo -e "$yellow" Waiting for docker daemon to start up.."$reset"
+    sleep 10
+  done
+  echo -e "$green" Docker Daemon is now started "$reset"
+} # End docker_daemon_health_check
+
 # Provide parameter flags and reply accordingly
 while getopts ":ahcilnrst" opt; do
   case ${opt} in
@@ -100,6 +108,7 @@ while getopts ":ahcilnrst" opt; do
       image_prune
       network_prune
       restart_docker_mac
+      docker_daemon_health_check
       login_to_gcp
       exit 0
       ;;
@@ -125,6 +134,7 @@ while getopts ":ahcilnrst" opt; do
       ;;
     r )
       restart_docker_mac
+      docker_daemon_health_check
       exit 0
       ;;
     s )
