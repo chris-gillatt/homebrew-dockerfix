@@ -1,5 +1,5 @@
 # Dockerfix
-An app designed for Docker Mac command line users who wish to clean up thier docker environment or restart the docker daemon or both.
+An app designed for Docker Mac command line users who wish to clean up their docker environment or restart the docker daemon or both.
 
 # Usage
 ```

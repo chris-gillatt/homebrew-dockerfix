@@ -69,23 +69,23 @@ image_prune () {
 network_prune () {
   echo -e "$yellow" Removing all docker networks"$reset"
   docker network prune --force
-} # network_prune
+} # End network_prune
 
 system_prune () {
   echo -e "$red" Performing Docker System Prune "$reset"
   docker system prune --all --force
-} # system_prune
+} # End system_prune
 
 login_to_gcp () {
   echo -e "$yellow" Logging into GCP"$reset"
   gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
-} # login_to_gcp
+} # End login_to_gcp
 
 restart_docker () {
   echo -e "$yellow" Restart Docker Daemon "$reset"
   killall Docker >/dev/null 2>&1
   open /Applications/Docker.app
-}
+} # End restart_docker
 
 # Provide parameter flags and reply accordingly
 while getopts ":ahcilnrst" opt; do
