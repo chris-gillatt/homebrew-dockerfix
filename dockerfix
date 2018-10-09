@@ -5,15 +5,15 @@
 # Output colour formatting based on OS Type
 # TO DO - Properly support CentOS.
 if [ "$OSTYPE" == "linux-gnu" ]; then
-  red="\e[31m"
-  green="\e[32m"
-  yellow="\e[33m"
-  reset="\e[0m"
+  red="\\e[31m"
+  green="\\e[32m"
+  yellow="\\e[33m"
+  reset="\\e[0m"
 elif [[ "$OSTYPE" == darwin* ]]; then
-  red="\033[31m"
-  green="\033[32m"
-  yellow="\033[33m"
-  reset="\033[0m"
+  red="\\033[31m"
+  green="\\033[32m"
+  yellow="\\033[33m"
+  reset="\\033[0m"
 else 
   red=""
   green=""
@@ -52,8 +52,13 @@ for arg in "$@"; do
 done
 
 stop_all_containers () {
-  echo -e "$yellow" Stopping all running Docker containers "$reset"
-  docker stop "$(docker ps --all --quiet)"
+  echo -e "$yellow" Stopping all running Docker containers"$reset"
+  containers=$(docker ps --all --quiet)
+  if [ -n "$containers" ]; then
+    docker stop "$containers"
+  else
+    echo "No containers to stop"
+  fi
 } # End stop_all_containers
 
 container_prune () {
@@ -72,7 +77,7 @@ network_prune () {
 } # End network_prune
 
 system_prune () {
-  echo -e "$red" Performing Docker System Prune "$reset"
+  echo -e "$red" Performing Docker System Prune"$reset"
   docker system prune --all --force
 } # End system_prune
 
@@ -81,11 +86,10 @@ login_to_gcp () {
   gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
 } # End login_to_gcp
 
-restart_docker () {
-  echo -e "$yellow" Restart Docker Daemon "$reset"
-  killall Docker >/dev/null 2>&1
-  open /Applications/Docker.app
-} # End restart_docker
+restart_docker_mac () {
+  echo -e "$yellow" Restarting Docker Daemon - this will take a minute or two"$reset"
+  killall Docker >/dev/null 2>&1 ; open /Applications/Docker.app
+} # End restart_docker_mac
 
 # Provide parameter flags and reply accordingly
 while getopts ":ahcilnrst" opt; do
@@ -95,7 +99,7 @@ while getopts ":ahcilnrst" opt; do
       container_prune
       image_prune
       network_prune
-      restart_docker
+      restart_docker_mac
       login_to_gcp
       exit 0
       ;;
@@ -120,7 +124,7 @@ while getopts ":ahcilnrst" opt; do
       exit 0
       ;;
     r )
-      restart_docker
+      restart_docker_mac
       exit 0
       ;;
     s )
