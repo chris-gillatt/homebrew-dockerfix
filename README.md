@@ -13,6 +13,7 @@ Dockerfix usage:
     -r, --restart-docker    Restart Docker Daemon
     -s, --system-prune      Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
     -t, --stop-containers   Stop all running containers
+    -v  --version           Print dockerfix current version
 ```
 
 # Installation

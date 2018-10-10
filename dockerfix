@@ -31,7 +31,8 @@ usage() { echo "Dockerfix usage:
     -n, --network-prune     Remove all docker networks 
     -r, --restart-docker    Restart Docker Daemon
     -s, --system-prune      Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
-    -t, --stop-containers   Stop all running containers" 1>&2; }
+    -t, --stop-containers   Stop all running containers"
+    -v --version            Print dockerfix current version  1>&2; }
 
 # Convert --long options to -s(hort) ones as getops does not support long options out of the box
 for arg in "$@"; do
@@ -46,6 +47,7 @@ for arg in "$@"; do
     "--restart-docker")   set -- "$@" "-r" ;;
     "--system-prune")     set -- "$@" "-s" ;;
     "--stop-containers")  set -- "$@" "-t" ;;
+    "--version")          set -- "$@" "-v" ;;
     *)                    set -- "$@" "$arg"
  #   "--"*) usage ${arg}; exit 2;;
   esac
@@ -53,7 +55,7 @@ done
 
 stop_all_containers () {
   echo -e "$yellow" Stopping all running Docker containers"$reset"
-  containers=$(docker ps --all --quiet)
+  containers=$(docker ps --quiet)
   if [ -n "$containers" ]; then
     docker stop "$containers"
   else
@@ -99,8 +101,13 @@ docker_daemon_health_check () {
   echo -e "$green" Docker Daemon is now started "$reset"
 } # End docker_daemon_health_check
 
+version_check () {
+  version=$(brew info dockerfix | grep stable | awk '{print $3}')
+  echo Dockerfix version "$version"
+}
+
 # Provide parameter flags and reply accordingly
-while getopts ":ahcilnrst" opt; do
+while getopts ":ahcilnrstv" opt; do
   case ${opt} in
     a )
       stop_all_containers
@@ -143,6 +150,10 @@ while getopts ":ahcilnrst" opt; do
       ;;
     t )
       stop_all_containers
+      exit 0
+      ;;
+    v )
+      version_check
       exit 0
       ;;
     \? )
