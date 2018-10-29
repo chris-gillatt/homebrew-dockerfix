@@ -24,17 +24,17 @@ fi
 # Help message
 usage() { echo "Dockerfix usage:
     -h, --help              Display this help message
-    -a, --all               Do all of the below, except -s
+    -a, --all               Stop containers, prune containers, images & networks, then restart the docker daemon
     -c, --container-prune   Remove all non-running docker containers
     -i, --image-prune       Remove all dangling docker images
     -l, --login-gcp         Log back into GCP
     -n, --network-prune     Remove all docker networks 
     -r, --restart-docker    Restart Docker Daemon
     -s, --system-prune      Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
-    -t, --stop-containers   Stop all running containers"
-    -v --version            Print dockerfix current version  1>&2; }
+    -t, --stop-containers   Stop all running containers
+    -v, --version           Print dockerfix current version" 1>&2; }
 
-# Convert --long options to -s(hort) ones as getops does not support long options out of the box
+# Convert --long options to -s(hort) ones as getops does not support long options.
 for arg in "$@"; do
   shift
   case "$arg" in
@@ -53,11 +53,11 @@ for arg in "$@"; do
   esac
 done
 
-stop_all_containers () {
+stop_all_running_containers () {
   echo -e "$yellow" Stopping all running Docker containers"$reset"
   containers=$(docker ps --quiet)
   if [ -n "$containers" ]; then
-    docker stop "$containers"
+    docker stop $(docker ps --quiet)
   else
     echo "No containers to stop"
   fi
@@ -104,7 +104,13 @@ docker_daemon_health_check () {
 version_check () {
   version=$(brew info dockerfix | grep stable | awk '{print $3}')
   echo Dockerfix version "$version"
-}
+} # End version_check
+
+# If no arguments are provided, print help
+if [ $# -eq 0 ]; then
+    usage
+    exit 2
+fi
 
 # Provide parameter flags and reply accordingly
 while getopts ":ahcilnrstv" opt; do
@@ -126,36 +132,28 @@ while getopts ":ahcilnrstv" opt; do
       ;;
     c )
       container_prune
-      exit 0
       ;;
     i )
       image_prune
-      exit 0
       ;;  
     l )
       login_to_gcp
-      exit 0
       ;;
     n )
       network_prune
-      exit 0
       ;;
     r )
       restart_docker_mac
       docker_daemon_health_check
-      exit 0
       ;;
     s )
       system_prune
-      exit 0
       ;;
     t )
-      stop_all_containers
-      exit 0
+      stop_all_running_containers
       ;;
     v )
       version_check
-      exit 0
       ;;
     \? )
       echo "Invalid Option: -$OPTARG" 1>&2
@@ -165,9 +163,3 @@ while getopts ":ahcilnrstv" opt; do
   esac
 done
 shift $((OPTIND -1))
-
-# If no arguments, print help
-if [ $# -eq 0 ]; then
-    usage
-    exit 2
-fi
