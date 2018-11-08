@@ -59,7 +59,7 @@ stop_all_running_containers () {
   if [ -n "$containers" ]; then
     docker stop $(docker ps --quiet)
   else
-    echo "No containers to stop"
+    echo -e "$yellow" There are no running containers to stop "$reset"
   fi
 } # End stop_all_containers
 
@@ -116,7 +116,7 @@ fi
 while getopts ":ahcilnrstv" opt; do
   case ${opt} in
     a )
-      stop_all_containers
+      stop_all_running_containers
       container_prune
       image_prune
       network_prune
