@@ -24,14 +24,15 @@ fi
 # Help message
 usage() { echo "Dockerfix usage:
     -h, --help                 Display this help message
-    -a, --all                  Stop containers, prune containers, images & networks, then restart the docker daemon
+    -a, --all                  Stop containers, prune containers, images & networks, restart
+                               the docker daemon, then perform a docker version check
     -c, --container-prune      Remove all non-running docker containers
-    -d, --check-docker-version Check to see if there's a more up-to-date version of docker availible
+    -d, --docker-version-check Check to see if there's a more up-to-date version of docker available
     -i, --image-prune          Remove all dangling docker images
-    -n, --network-prune        Remove all docker networks 
-    -r, --restart-docker       Restart Docker Daemon
-    -s, --system-prune         Perform Docker System Prune.  Essentially the same as -a, but does not handle running containers
-                               or restart the docker daemon
+    -n, --network-prune        Remove all docker networks
+    -r, --restart-docker       Restart docker daemon
+    -s, --system-prune         Perform docker system prune.  Essentially the same as -a, but
+                               Does not handle running containers or restart the docker daemon
     -t, --stop-containers      Stop all running containers
     -v, --version              Print dockerfix current version" 1>&2; }
 
@@ -42,7 +43,7 @@ for arg in "$@"; do
     "--all")                  set -- "$@" "-a" ;;
     "--help")                 set -- "$@" "-h" ;;
     "--container-prune")      set -- "$@" "-c" ;;
-    "--check-docker-version") set -- "$@" "-d" ;;
+    "--docker-version-check") set -- "$@" "-d" ;;
     "--image-prune")          set -- "$@" "-i" ;;
     "--network-prune")        set -- "$@" "-n" ;;
     "--restart-docker")       set -- "$@" "-r" ;;
@@ -109,7 +110,7 @@ version_check () {
 } # End version_check
 
 semver_comparison () {
-  # Function to allow comparison of Semantic Versioning
+  # Function to allow comparison of semantic versions
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
@@ -125,7 +126,7 @@ docker_version_check () {
   else
     echo -e "$green [  OK  ]$yellow Docker is up-to-date $reset"
   fi
-} # End version_check
+} # End docker_version_check
 
 # If no arguments are provided, print help
 if [ $# -eq 0 ]; then
