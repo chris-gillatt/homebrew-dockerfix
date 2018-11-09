@@ -30,7 +30,8 @@ usage() { echo "Dockerfix usage:
     -i, --image-prune          Remove all dangling docker images
     -n, --network-prune        Remove all docker networks 
     -r, --restart-docker       Restart Docker Daemon
-    -s, --system-prune         Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
+    -s, --system-prune         Perform Docker System Prune.  Essentially the same as -a, but does not handle running containers
+                               or restart the docker daemon
     -t, --stop-containers      Stop all running containers
     -v, --version              Print dockerfix current version" 1>&2; }
 
@@ -59,7 +60,7 @@ stop_all_running_containers () {
   if [ -n "$containers" ]; then
     docker stop $(docker ps --quiet)
   else
-    echo -e "$yellow There are no running containers to stop $reset"
+    echo -e "$green >$yellow There are no running containers to stop $reset"
   fi
 } # End stop_all_containers
 
@@ -96,7 +97,7 @@ restart_docker_mac () {
 
 docker_daemon_health_check () {
   until docker info >/dev/null 2>&1 ; do
-    echo -e "$yellow Waiting for docker daemon to start up.. $reset"
+    echo -e "$green >$yellow Waiting for docker daemon to start up.. $reset"
     sleep 10
   done
   echo -e "$green Docker Daemon is now started $reset"
@@ -114,11 +115,13 @@ semver_comparison () {
 
 docker_version_check () {
   docker_local_version=$(docker info --format '{{ .ServerVersion }}')
-  docker_remote_version=$(curl -s https://download.docker.com/mac/static/stable/x86_64/ | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
+  docker_remote_version=$(curl -s https://download.docker.com/mac/static/stable/x86_64/ | grep -o "docker-.*-ce" | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
   echo -e "$yellow Checking for docker updates.. $reset"
+  echo -e "$green >$yellow Docker version $docker_remote_version is the latest stable ce version currently available"
+  echo -e "$green >$yellow Docker version $docker_local_version is currently installed"
   if semver_comparison "$docker_remote_version" "$docker_local_version"; then
-    echo -e "$red [ WARN ]$yellow A New version of Docker is availible: version $docker_remote_version $reset"
-    echo -e "$red [ WARN ]$yellow Currently installed: version $docker_local_version $reset"
+    echo -e "$red[ WARN ]$yellow A newer version of Docker is available: version $docker_remote_version $reset"
+    echo -e "$yellow Check https://download.docker.com/mac/static/stable/x86_64/ $reset"
   else
     echo -e "$green [  OK  ]$yellow Docker is up-to-date $reset"
   fi
