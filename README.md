@@ -7,7 +7,7 @@ Dockerfix usage:
     -h, --help                 Display this help message
     -a, --all                  Do all of the below, except -s
     -c, --container-prune      Remove all non-running docker containers
-    -d, --check-docker-version Check to see if there's a more up-to-date version of docker availible
+    -d, --check-docker-version Check to see if there's a more up-to-date version of docker available
     -i, --image-prune          Remove all dangling docker images
     -n, --network-prune        Remove all docker networks
     -r, --restart-docker       Restart Docker Daemon

@@ -9,6 +9,7 @@ application/bin
 *.DS_Store
 *.iml
 *.log
+*.bak
 
 **/.gradle
 **/build

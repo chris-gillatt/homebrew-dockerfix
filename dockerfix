@@ -131,7 +131,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Provide parameter flags and reply accordingly
-while getopts ":adhcilnrstv" opt; do
+while getopts ":acdhilnrstv" opt; do
   case ${opt} in
     a )
       stop_all_running_containers
@@ -141,7 +141,7 @@ while getopts ":adhcilnrstv" opt; do
       restart_docker_mac
       docker_daemon_health_check
       docker_version_check
-      echo -e "$yellow" Dockerfix all complete."$reset"
+      echo -e "$yellow Dockerfix all complete. $reset"
       exit 0
       ;;
     c )
