@@ -23,87 +23,105 @@ fi
 
 # Help message
 usage() { echo "Dockerfix usage:
-    -h, --help              Display this help message
-    -a, --all               Stop containers, prune containers, images & networks, then restart the docker daemon
-    -c, --container-prune   Remove all non-running docker containers
-    -i, --image-prune       Remove all dangling docker images
-    -l, --login-gcp         Log back into GCP
-    -n, --network-prune     Remove all docker networks 
-    -r, --restart-docker    Restart Docker Daemon
-    -s, --system-prune      Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
-    -t, --stop-containers   Stop all running containers
-    -v, --version           Print dockerfix current version" 1>&2; }
+    -h, --help                 Display this help message
+    -a, --all                  Stop containers, prune containers, images & networks, then restart the docker daemon
+    -c, --container-prune      Remove all non-running docker containers
+    -d, --check-docker-version Check to see if there's a more up-to-date version of docker availible
+    -i, --image-prune          Remove all dangling docker images
+    -n, --network-prune        Remove all docker networks 
+    -r, --restart-docker       Restart Docker Daemon
+    -s, --system-prune         Perform Docker System Prune.  Essentially the same as -a, but does not restart the docker daemon or log back into GCP
+    -t, --stop-containers      Stop all running containers
+    -v, --version              Print dockerfix current version" 1>&2; }
 
 # Convert --long options to -s(hort) ones as getops does not support long options.
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--all")              set -- "$@" "-a" ;;
-    "--help")             set -- "$@" "-h" ;;
-    "--container-prune")  set -- "$@" "-c" ;;
-    "--image-prune")      set -- "$@" "-i" ;;
-    "--login-gcp")        set -- "$@" "-l" ;;
-    "--network-prune")    set -- "$@" "-n" ;;
-    "--restart-docker")   set -- "$@" "-r" ;;
-    "--system-prune")     set -- "$@" "-s" ;;
-    "--stop-containers")  set -- "$@" "-t" ;;
-    "--version")          set -- "$@" "-v" ;;
-    *)                    set -- "$@" "$arg"
+    "--all")                  set -- "$@" "-a" ;;
+    "--help")                 set -- "$@" "-h" ;;
+    "--container-prune")      set -- "$@" "-c" ;;
+    "--check-docker-version") set -- "$@" "-d" ;;
+    "--image-prune")          set -- "$@" "-i" ;;
+    "--network-prune")        set -- "$@" "-n" ;;
+    "--restart-docker")       set -- "$@" "-r" ;;
+    "--system-prune")         set -- "$@" "-s" ;;
+    "--stop-containers")      set -- "$@" "-t" ;;
+    "--version")              set -- "$@" "-v" ;;
+    *)                        set -- "$@" "$arg"
  #   "--"*) usage ${arg}; exit 2;;
   esac
 done
 
 stop_all_running_containers () {
-  echo -e "$yellow" Stopping all running Docker containers"$reset"
+  echo -e "$yellow Stopping all running Docker containers $reset"
   containers=$(docker ps --quiet)
   if [ -n "$containers" ]; then
     docker stop $(docker ps --quiet)
   else
-    echo -e "$yellow" There are no running containers to stop "$reset"
+    echo -e "$yellow There are no running containers to stop $reset"
   fi
 } # End stop_all_containers
 
 container_prune () {
-  echo -e "$yellow" Removing all non-running docker containers"$reset"
+  echo -e "$yellow Removing all non-running docker containers $reset"
   docker container prune --force
 } # End container_prune
 
 image_prune () {
-  echo -e "$yellow" Removing all dangling docker images"$reset"
+  echo -e "$yellow Removing all dangling docker images $reset"
   docker image prune --force
 } # End image_prune
 
 network_prune () {
-  echo -e "$yellow" Removing all docker networks"$reset"
+  echo -e "$yellow Removing all docker networks $reset"
   docker network prune --force
 } # End network_prune
 
 system_prune () {
-  echo -e "$red" Performing Docker System Prune"$reset"
+  echo -e "$red Performing Docker System Prune $reset"
   docker system prune --all --force
 } # End system_prune
 
+# TODO Remove this and put it in a gcloud related tool or something. 
 login_to_gcp () {
-  echo -e "$yellow" Logging into GCP"$reset"
+  echo -e "$yellow Logging into GCP $reset"
   gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
 } # End login_to_gcp
 
 restart_docker_mac () {
-  echo -e "$yellow" Restarting Docker Daemon - this will take a minute or two"$reset"
+  echo -e "$yellow Restarting Docker Daemon - this will take a minute or two $reset"
   killall Docker >/dev/null 2>&1 ; open /Applications/Docker.app
 } # End restart_docker_mac
 
 docker_daemon_health_check () {
   until docker info >/dev/null 2>&1 ; do
-    echo -e "$yellow" Waiting for docker daemon to start up.."$reset"
+    echo -e "$yellow Waiting for docker daemon to start up.. $reset"
     sleep 10
   done
-  echo -e "$green" Docker Daemon is now started "$reset"
+  echo -e "$green Docker Daemon is now started $reset"
 } # End docker_daemon_health_check
 
 version_check () {
   version=$(brew info dockerfix | grep stable | awk '{print $3}')
   echo Dockerfix version "$version"
+} # End version_check
+
+semver_comparison () {
+  # Function to allow comparison of Semantic Versioning
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+}
+
+docker_version_check () {
+  docker_local_version=$(docker info --format '{{ .ServerVersion }}')
+  docker_remote_version=$(curl -s https://download.docker.com/mac/static/stable/x86_64/ | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
+  echo -e "$yellow Checking for docker updates.. $reset"
+  if semver_comparison "$docker_remote_version" "$docker_local_version"; then
+    echo -e "$red [ WARN ]$yellow A New version of Docker is availible: version $docker_remote_version $reset"
+    echo -e "$red [ WARN ]$yellow Currently installed: version $docker_local_version $reset"
+  else
+    echo -e "$green [  OK  ]$yellow Docker is up-to-date $reset"
+  fi
 } # End version_check
 
 # If no arguments are provided, print help
@@ -113,7 +131,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Provide parameter flags and reply accordingly
-while getopts ":ahcilnrstv" opt; do
+while getopts ":adhcilnrstv" opt; do
   case ${opt} in
     a )
       stop_all_running_containers
@@ -122,16 +140,19 @@ while getopts ":ahcilnrstv" opt; do
       network_prune
       restart_docker_mac
       docker_daemon_health_check
-      login_to_gcp
+      docker_version_check
       echo -e "$yellow" Dockerfix all complete."$reset"
-      exit 0
-      ;;
-    h )
-      usage
       exit 0
       ;;
     c )
       container_prune
+      ;;
+    d )
+      docker_version_check
+      ;;
+    h )
+      usage
+      exit 0
       ;;
     i )
       image_prune
