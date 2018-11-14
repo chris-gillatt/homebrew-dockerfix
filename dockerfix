@@ -22,19 +22,25 @@ else
 fi 
 
 # Help message
-usage() { echo "Dockerfix usage:
-    -h, --help                 Display this help message
-    -a, --all                  Stop containers, prune containers, images & networks, restart
-                               the docker daemon, then perform a docker version check
-    -c, --container-prune      Remove all non-running docker containers
-    -d, --docker-version-check Check to see if there's a more up-to-date version of docker available
-    -i, --image-prune          Remove all dangling docker images
-    -n, --network-prune        Remove all docker networks
-    -r, --restart-docker       Restart docker daemon
-    -s, --system-prune         Perform docker system prune.  Essentially the same as -a, but
-                               does not handle running containers or restart the docker daemon
-    -t, --stop-containers      Stop all running containers
-    -v, --version              Print dockerfix current version" 1>&2; }
+usage() { echo "
+
+Usage: dockerfix [OPTIONS]
+
+Housekeeping for docker environments
+
+Options:
+    -h, --help                  Display this help message
+    -a, --all                   Stop containers, prune containers, images & networks, restart
+                                the docker daemon, then perform a docker version check
+    -c, --container-prune       Remove all non-running docker containers
+    -d, --docker-version-check  Check to see if there's a more up-to-date version of docker available
+    -i, --image-prune           Remove all dangling docker images
+    -n, --network-prune         Remove all docker networks
+    -r, --restart-docker        Restart docker daemon
+    -s, --system-prune          Perform docker system prune.  Essentially the same as -a, but
+                                does not handle running containers or restart the docker daemon
+    -t, --stop-containers       Stop all running containers
+    -v, --version               Print dockerfix current version" 1>&2; }
 
 # Convert --long options to -s(hort) ones as getops does not support long options.
 for arg in "$@"; do
@@ -92,7 +98,7 @@ login_to_gcp () {
 } # End login_to_gcp
 
 restart_docker_mac () {
-  echo -e "$yellow Restarting Docker Daemon - this will take a minute or two $reset"
+  echo -e "$yellow Restarting Docker Daemon - this may take a minute or two $reset"
   killall Docker >/dev/null 2>&1 ; open /Applications/Docker.app
 } # End restart_docker_mac
 
@@ -101,7 +107,7 @@ docker_daemon_health_check () {
     echo -e "$green >$yellow Waiting for docker daemon to start up.. $reset"
     sleep 10
   done
-  echo -e "$green Docker Daemon is now started $reset"
+  echo -e "$green [  OK  ]$yellow The Docker Daemon has now started $reset"
 } # End docker_daemon_health_check
 
 version_check () {
