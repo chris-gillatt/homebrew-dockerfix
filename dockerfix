@@ -98,7 +98,7 @@ stop_all_running_containers () {
   if [ -n "$containers" ]; then
     docker stop "$(docker ps --quiet)"
   else
-    text_format_green "> " && text_format_yellow "There are no running containers to stop"
+    text_format_green "> " && text_format_yellow "There are no running containers to stop" && echo 
   fi
 } # End stop_all_containers
 

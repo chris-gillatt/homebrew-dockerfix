@@ -1,9 +1,9 @@
 class Dockerfix < Formula
   desc "Housekeeping for docker environments"
   homepage "https://github.com/chris-gillatt/homebrew-dockerfix"
-  url "https://github.com/chris-gillatt/homebrew-dockerfix/raw/master/tars/dockerfix-0.0.11.tar.gz"
-  sha256 "f49f1373037a8b84002533256463f4c74351db036211907df56f74553d8b16d2"
-  version "0.0.11"
+  url "https://github.com/chris-gillatt/homebrew-dockerfix/raw/master/tars/dockerfix-0.0.12.tar.gz"
+  sha256 "6c426923bef257456d075dcf254199aa35beb7e4089738261fd1b841f25e6004"
+  version "0.0.12"
 
   depends_on "curl"
 
