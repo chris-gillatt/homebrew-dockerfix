@@ -21,10 +21,42 @@ else
   reset=""
 fi 
 
-# Help message
-usage() { echo "
+# Formatted Output Prefixes
+ok="  OK  "
+info=" INFO "
+warn=" WARN "
 
-Usage: dockerfix [OPTIONS]
+# Functions to allow tidy text formatting
+# Colour Text
+text_format_red () {
+  echo -en "$red$1$reset"
+} # End text_format_red
+
+text_format_green () {
+  echo -en "$green$1$reset"
+} # End text_format_green
+
+text_format_yellow () {
+  echo -en "$yellow$1$reset"
+} # End text_format_yellow
+
+# Prefixes
+text_format_ok () {
+  echo -en "[$green$ok$reset] "
+} # End text_format_ok
+
+text_format_info () {
+  echo -en "$green$info$reset "
+} # End text_format_info
+
+text_format_warn () {
+  echo -en "$yellow$warn$reset "
+} # End text_format_warn
+
+# Help message
+usage () { 
+
+echo "Usage: dockerfix [OPTIONS]
 
 Housekeeping for docker environments
 
@@ -57,91 +89,90 @@ for arg in "$@"; do
     "--stop-containers")      set -- "$@" "-t" ;;
     "--version")              set -- "$@" "-v" ;;
     *)                        set -- "$@" "$arg"
- #   "--"*) usage ${arg}; exit 2;;
   esac
 done
 
 stop_all_running_containers () {
-  echo -e "$yellow Stopping all running Docker containers $reset"
+  text_format_yellow "Stopping all running Docker containers" && echo 
   containers=$(docker ps --quiet)
   if [ -n "$containers" ]; then
-    docker stop $(docker ps --quiet)
+    docker stop "$(docker ps --quiet)"
   else
-    echo -e "$green >$yellow There are no running containers to stop $reset"
+    text_format_green "> " && text_format_yellow "There are no running containers to stop"
   fi
 } # End stop_all_containers
 
 container_prune () {
-  echo -e "$yellow Removing all non-running docker containers $reset"
+  text_format_yellow "Removing all non-running docker containers" && echo 
   docker container prune --force
 } # End container_prune
 
 image_prune () {
-  echo -e "$yellow Removing all dangling docker images $reset"
+  text_format_yellow "Removing all dangling docker images" && echo
   docker image prune --force
 } # End image_prune
 
 network_prune () {
-  echo -e "$yellow Removing all docker networks $reset"
+  text_format_yellow "Removing all docker networks" && echo 
   docker network prune --force
 } # End network_prune
 
 system_prune () {
-  echo -e "$red Performing Docker System Prune $reset"
+  text_format_yellow "Performing Docker System Prune" && echo 
   docker system prune --all --force
 } # End system_prune
 
-# TODO Remove this and put it in a gcloud related tool or something. 
-login_to_gcp () {
-  echo -e "$yellow Logging into GCP $reset"
-  gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
-} # End login_to_gcp
-
 restart_docker_mac () {
-  echo -e "$yellow Restarting Docker Daemon - this may take a minute or two $reset"
-  killall Docker >/dev/null 2>&1 ; open /Applications/Docker.app
+  text_format_yellow "Restarting Docker Daemon - this may take a minute or two" && echo 
+  killall Docker >/dev/null 2>&1 && sleep 10 && open /Applications/Docker.app || exit 1
 } # End restart_docker_mac
 
 docker_daemon_health_check () {
   until docker info >/dev/null 2>&1 ; do
-    echo -e "$green >$yellow Waiting for docker daemon to start up.. $reset"
-    sleep 10
+    text_format_green "> " && text_format_yellow "Waiting for docker daemon to start up.." && echo
+    sleep 5
   done
-  echo -e "$green [  OK  ]$yellow The Docker Daemon has now started $reset"
+  text_format_ok && text_format_yellow "The Docker Daemon has now started"
 } # End docker_daemon_health_check
 
 version_check () {
   version=$(brew info dockerfix | grep stable | awk '{print $3}')
-  echo Dockerfix version "$version"
+  text_format_yellow "Dockerfix version $version"
 } # End version_check
 
 semver_comparison () {
   # Function to allow comparison of semantic versions
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
-}
+} # End semver_comparison
 
 docker_version_check () {
   docker_local_version=$(docker info --format '{{ .ServerVersion }}')
   docker_remote_version=$(curl -s https://download.docker.com/mac/static/stable/x86_64/ | grep -o "docker-.*-ce" | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
-  echo -e "$yellow Checking for docker updates.. $reset"
-  echo -e "$green >$yellow Docker version $docker_remote_version is the latest stable ce version currently available"
-  echo -e "$green >$yellow Docker version $docker_local_version is currently installed"
+  text_format_yellow "Checking for docker updates.." && echo
+  text_format_green "> " && text_format_yellow "Docker version $docker_remote_version is the latest stable ce version currently available" && echo 
+  text_format_green "> " && text_format_yellow "Docker version $docker_local_version is currently installed" && echo
   if semver_comparison "$docker_remote_version" "$docker_local_version"; then
-    echo -e "$red[ WARN ]$yellow A newer version of Docker is available: version $docker_remote_version $reset"
-    echo -e "$yellow Check https://download.docker.com/mac/static/stable/x86_64/ $reset"
+    text_format_info && text_format_yellow "A newer version of Docker is available: version $docker_remote_version" && echo
+    text_format_info && text_format_yellow "Check https://download.docker.com/mac/static/stable/x86_64/" && echo
   else
-    echo -e "$green [  OK  ]$yellow Docker is up-to-date $reset"
+    text_format_ok && text_format_yellow "Docker is up-to-date" && echo 
   fi
 } # End docker_version_check
 
 # If no arguments are provided, print help
 if [ $# -eq 0 ]; then
-    usage
-    exit 2
+  usage
+  exit 0
+fi
+
+# Check to ensure docker is installed, otherwise there's no point in running dockerfix.
+if [ ! -x "$(command -v docker)" ]; then
+  text_format_warn && text_format_red "Docker not found.  Is it installed, executable and in your \$PATH?"
+  exit 1
 fi
 
 # Provide parameter flags and reply accordingly
-while getopts ":acdhilnrstv" opt; do
+while getopts ":acdhinrstv" opt; do
   case ${opt} in
     a )
       stop_all_running_containers
@@ -151,7 +182,7 @@ while getopts ":acdhilnrstv" opt; do
       restart_docker_mac
       docker_daemon_health_check
       docker_version_check
-      echo -e "$yellow Dockerfix all complete. $reset"
+      text_format_ok && text_format_yellow "Dockerfix --all complete."
       exit 0
       ;;
     c )
@@ -167,9 +198,6 @@ while getopts ":acdhilnrstv" opt; do
     i )
       image_prune
       ;;  
-    l )
-      login_to_gcp
-      ;;
     n )
       network_prune
       ;;
@@ -189,7 +217,7 @@ while getopts ":acdhilnrstv" opt; do
     \? )
       echo "Invalid Option: -$OPTARG" 1>&2
       usage
-      exit 2
+      exit 1
       ;;
   esac
 done
