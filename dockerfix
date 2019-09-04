@@ -124,7 +124,7 @@ system_prune () {
 
 restart_docker_mac () {
   text_format_yellow "Restarting Docker Daemon - this may take a minute or two" && echo 
-  killall Docker >/dev/null 2>&1 && sleep 10 && open /Applications/Docker.app || exit 1
+  killall Docker >/dev/null 2>&1 ; sleep 10 && open /Applications/Docker.app || exit 1
 } # End restart_docker_mac
 
 docker_daemon_health_check () {
@@ -132,7 +132,7 @@ docker_daemon_health_check () {
     text_format_green "> " && text_format_yellow "Waiting for docker daemon to start up.." && echo
     sleep 5
   done
-  text_format_ok && text_format_yellow "The Docker Daemon has now started"
+  text_format_ok && text_format_yellow "The Docker Daemon has now started" && echo
 } # End docker_daemon_health_check
 
 version_check () {
