@@ -128,10 +128,14 @@ restart_docker_mac () {
 } # End restart_docker_mac
 
 docker_daemon_health_check () {
-  until docker info >/dev/null 2>&1 ; do
-    text_format_green "> " && text_format_yellow "Waiting for docker daemon to start up.." && echo
-    sleep 5
+  # Wait for docker to become responsive and show a simple progress bar using dots
+  DOT="."
+  until docker info >/dev/null 2>&1; do
+    text_format_green "> " && text_format_yellow "Waiting for docker daemon to start up..${DOT}\r"
+    DOT="${DOT}."
+    sleep 0.1
   done
+  echo
   text_format_ok && text_format_yellow "The Docker Daemon has now started" && echo
 } # End docker_daemon_health_check
 
