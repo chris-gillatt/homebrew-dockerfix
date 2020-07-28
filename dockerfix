@@ -153,7 +153,7 @@ docker_version_check () {
   docker_local_version=$(docker info --format '{{ .ServerVersion }}')
   docker_remote_version=$(curl -s https://download.docker.com/mac/static/stable/x86_64/ | grep -o "docker-.*" | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
   text_format_yellow "Checking for docker updates.." && echo
-  text_format_green "> " && text_format_yellow "Docker version $docker_remote_version is the latest stable ce version currently available" && echo 
+  text_format_green "> " && text_format_yellow "Docker version $docker_remote_version is the latest stable version currently available" && echo 
   text_format_green "> " && text_format_yellow "Docker version $docker_local_version is currently installed" && echo
   if semver_comparison "$docker_remote_version" "$docker_local_version"; then
     text_format_info && text_format_yellow "A newer version of Docker is available: version $docker_remote_version" && echo
