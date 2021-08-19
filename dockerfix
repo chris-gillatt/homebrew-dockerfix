@@ -3,7 +3,6 @@
 # Author: C Gillatt
 
 # Output colour formatting based on OS Type
-# TO DO - Properly support CentOS.
 if [ "$OSTYPE" == "linux-gnu" ]; then
   red="\\e[31m"
   green="\\e[32m"
@@ -29,28 +28,28 @@ warn=" WARN "
 # Functions to allow tidy text formatting
 # Colour Text
 text_format_red () {
-  echo -en "$red$1$reset"
+  echo -en "${red}${1}${reset}"
 } # End text_format_red
 
 text_format_green () {
-  echo -en "$green$1$reset"
+  echo -en "${green}${1}${reset}"
 } # End text_format_green
 
 text_format_yellow () {
-  echo -en "$yellow$1$reset"
+  echo -en "${yellow}${1}${reset}"
 } # End text_format_yellow
 
 # Prefixes
 text_format_ok () {
-  echo -en "[$green$ok$reset] "
+  echo -en "[${green}${ok}${reset}] "
 } # End text_format_ok
 
 text_format_info () {
-  echo -en "$green$info$reset "
+  echo -en "[${green}${info}${reset}] "
 } # End text_format_info
 
 text_format_warn () {
-  echo -en "$yellow$warn$reset "
+  echo -en "[${yellow}${warn}${reset}] "
 } # End text_format_warn
 
 # Help message
@@ -78,8 +77,8 @@ Options:
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--all")                  set -- "$@" "-a" ;;
     "--help")                 set -- "$@" "-h" ;;
+    "--all")                  set -- "$@" "-a" ;;
     "--container-prune")      set -- "$@" "-c" ;;
     "--docker-version-check") set -- "$@" "-d" ;;
     "--image-prune")          set -- "$@" "-i" ;;
@@ -93,34 +92,36 @@ for arg in "$@"; do
 done
 
 stop_all_running_containers () {
-  text_format_yellow "Stopping all running Docker containers" && echo 
+  text_format_yellow "Stopping running Docker containers" && echo
   containers=$(docker ps --quiet)
-  if [ -n "$containers" ]; then
-    for container in $containers; do 
-      docker stop "$container"
-    done
-  else
-    text_format_green "> " && text_format_yellow "There are no running containers to stop" && echo 
+  container_count=$(echo -n "$containers" | grep -c '^')
+  text_format_yellow "There's $container_count container(s) to stop.." && echo
+  if [ "$container_count" -gt 0 ]; then
+    # No quotes here to support multiple container stop
+    # shellcheck disable=SC2086
+    docker stop $containers
+    text_format_yellow "Stopped $container_count container(s)" && echo
   fi
 } # End stop_all_containers
 
 container_prune () {
-  text_format_yellow "Removing all non-running docker containers" && echo 
+  text_format_yellow "Removing all non-running docker containers.." && echo 
   docker container prune --force
 } # End container_prune
 
 image_prune () {
-  text_format_yellow "Removing all dangling docker images" && echo
+  text_format_yellow "Removing all dangling docker images.." && echo
   docker image prune --force
 } # End image_prune
 
 network_prune () {
-  text_format_yellow "Removing all docker networks" && echo 
+  text_format_yellow "Removing all docker networks.." && echo 
   docker network prune --force
 } # End network_prune
 
 system_prune () {
-  text_format_yellow "Performing Docker System Prune" && echo 
+  text_format_yellow "Performing Docker System Prune.." && echo 
+  docker system df
   docker system prune --all --force
 } # End system_prune
 
@@ -135,7 +136,7 @@ docker_daemon_health_check () {
   until docker info >/dev/null 2>&1; do
     text_format_green "> " && text_format_yellow "Waiting for docker daemon to start up..${DOT}\r"
     DOT="${DOT}."
-    sleep 0.1
+    sleep 0.5
   done
   echo
   text_format_ok && text_format_yellow "The Docker Daemon has now started" && echo
@@ -152,16 +153,21 @@ semver_comparison () {
 } # End semver_comparison
 
 docker_version_check () {
+  docker_download_url="https://download.docker.com/mac/static/stable/x86_64/"
   docker_local_version=$(docker info --format '{{ .ServerVersion }}')
-  docker_remote_version=$(curl -s https://download.docker.com/mac/static/stable/x86_64/ | grep -o "docker-.*" | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
+  docker_remote_version=$(curl -s "$docker_download_url" | perl -pe 'if(($_)=/([0-9]+([.][0-9]+)+)/){$_.="\n"}' | sort -rV | head -1)
   text_format_yellow "Checking for docker updates.." && echo
-  text_format_green "> " && text_format_yellow "Docker version $docker_remote_version is the latest stable version currently available" && echo 
-  text_format_green "> " && text_format_yellow "Docker version $docker_local_version is currently installed" && echo
-  if semver_comparison "$docker_remote_version" "$docker_local_version"; then
-    text_format_info && text_format_yellow "A newer version of Docker is available: version $docker_remote_version" && echo
-    text_format_info && text_format_yellow "Check https://download.docker.com/mac/static/stable/x86_64/" && echo
+  if [ -n "$docker_remote_version" ]; then
+  text_format_green "> " && text_format_yellow "Latest available Docker version: v$docker_remote_version" && echo 
+  text_format_green "> " && text_format_yellow "Currently installed Docker version: v$docker_local_version" && echo
+    if semver_comparison "$docker_remote_version" "$docker_local_version"; then
+      text_format_info && text_format_yellow "Update to get the latest version of Docker: v$docker_remote_version" && echo
+    else
+      echo
+      text_format_ok && text_format_yellow "Docker is up-to-date" && echo 
+    fi
   else
-    text_format_ok && text_format_yellow "Docker is up-to-date" && echo 
+    text_format_warn && text_format_yellow "No results from $docker_download_url.  Are you connected to the internet?" && echo
   fi
 } # End docker_version_check
 
@@ -181,6 +187,7 @@ fi
 while getopts ":acdhinrstv" opt; do
   case ${opt} in
     a )
+      docker system df
       stop_all_running_containers
       container_prune
       image_prune
