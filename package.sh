@@ -6,7 +6,7 @@ REPO_NAME="homebrew-dockerfix"
 git config user.name "$USER"
 git config user.email "$USER_EMAIL"
 
-export RELEASE_COUNT=$(git rev-list --all --count)
+export RELEASE_COUNT="$GITHUB_RUN_NUMBER"
 GIT_REVISION=$(git rev-parse HEAD)
 
 BRANCH="master"
