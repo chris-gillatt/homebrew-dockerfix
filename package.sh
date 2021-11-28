@@ -20,9 +20,8 @@ erb "${APP}.erb" > "${APP}.rb"
 
 ## Git Tasks
 git add "${APP}.rb"
-# Commit files to repo
+# Commit and push files to repo
 git commit -m "Push $APP Release 0.1.${RELEASE_COUNT}" &&
-# Push to remote using shippr user
 git push https://"${USER}:${USER_PASSWORD}@github.com/${ORG}/${REPO_NAME}".git "$BRANCH"
 
 # Publish go cli binaries
