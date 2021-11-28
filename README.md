@@ -26,3 +26,4 @@ Install/uninstall/upgrade dockerfix using brew:
 `brew tap chris-gillatt/homebrew-dockerfix` 
 
 `brew install dockerfix`
+
