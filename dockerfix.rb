@@ -1,13 +1,11 @@
 class Dockerfix < Formula
   desc "Convenient housekeeping for docker Mac users"
   homepage "https://github.com/chris-gillatt/homebrew-dockerfix"
-  url "https://github.com/chris-gillatt/homebrew-dockerfix/raw/master/tars/dockerfix-0.0.17.tar.gz"
-  sha256 "2288c50949cc61347fb9af66f83f8c0b38d5442d231abf48ee92c80d1017cb3e"
-  version "0.0.17"
+  url "https://github.com/chris-gillatt/homebrew-dockerfix/releases/download/0.0.2/dockerfix-0.0.2.tar.gz"
+  sha256 "51fc291a95ba42810dcf0f7b404ef08780a96aa6563ecbbf4b48dda9e3ad9aed"
+  version "0.0.2"
 
   depends_on "curl"
-
-  bottle :unneeded
 
   def install
     bin.install "dockerfix"
