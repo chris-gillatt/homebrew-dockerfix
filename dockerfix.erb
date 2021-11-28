@@ -1,0 +1,13 @@
+class Dockerfix < Formula
+  desc "Convenient housekeeping for docker Mac users"
+  homepage "https://github.com/chris-gillatt/homebrew-dockerfix"
+  url "https://github.com/chris-gillatt/homebrew-dockerfix/releases/download/0.0.<%= ENV["RELEASE_COUNT"] %>/dockerfix-0.0.<%= ENV["RELEASE_COUNT"] %>.tar.gz"
+  sha256 "<%= `sha256sum tars/dockerfix-0.0.#{ENV["RELEASE_COUNT"]}.tar.gz | awk '{printf $1}'` %>"
+  version "0.0.<%= ENV["RELEASE_COUNT"] %>"
+
+  depends_on "curl"
+
+  def install
+    bin.install "dockerfix"
+  end
+end
