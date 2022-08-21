@@ -1,4 +1,4 @@
-# Dockerfix
+# [![CI](https://github.com/chris-gillatt/homebrew-dockerfix/actions/workflows/main.yml/badge.svg)](https://github.com/chris-gillatt/homebrew-dockerfix/actions/workflows/main.yml) Dockerfix
 An app designed for Docker Mac command line users who wish to clean up their docker environment or restart the docker daemon or both.
 
 # Usage
